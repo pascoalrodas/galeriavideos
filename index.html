@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso - Galeria de Vídeos</title>
+    <link rel="stylesheet" href="login.css"> 
+    <style>
+        
+    </style>
+</head>
+<body>
+
+    <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 2rem;">
+        
+        <div class="card" id="card-login">
+            <h2>Acessar Galeria</h2>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="login-email">E-mail</label>
+                    <input type="email" id="login-email" required placeholder="seu@email.com">
+                </div>
+                <div class="input-group">
+                    <label for="login-senha">Senha</label>
+                    <input type="password" id="login-senha" required placeholder="Sua senha">
+                </div>
+                <button type="submit" style="background-color: #10b981;">Entrar</button>
+            </form>
+            <div class="alternar-link">
+                Não tem uma conta? <a onclick="mostrarCadastro()">Criar conta</a>
+            </div>
+        </div>
+
+        <div class="card escondido" id="card-cadastro">
+            <h2>Criar Conta</h2>
+            <form id="cadastro-form">
+                <div class="input-group">
+                    <label for="nome">Nome</label>
+                    <input type="text" id="nome" required placeholder="Seu nome">
+                </div>
+                <div class="input-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" required placeholder="seu@email.com">
+                </div>
+                <div class="input-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" required placeholder="Sua senha">
+                </div>
+                <button type="submit">Cadastrar</button> 
+            </form>
+            <div id="mensagem" class="hidden"></div>
+            <div class="alternar-link">
+                Já tem uma conta? <a onclick="mostrarLogin()">Acessar conta</a>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- FUNÇÕES PARA ALTERNAR AS TELAS ---
+        const cardLogin = document.getElementById('card-login');
+        const cardCadastro = document.getElementById('card-cadastro');
+
+        function mostrarCadastro() {
+            cardLogin.classList.add('escondido');      // Esconde o login
+            cardCadastro.classList.remove('escondido'); // Mostra o cadastro
+        }
+
+        function mostrarLogin() {
+            cardCadastro.classList.add('escondido');   // Esconde o cadastro
+            cardLogin.classList.remove('escondido');    // Mostra o login
+        }
+
+        // --- SEU CÓDIGO JAVASCRIPT DE CADASTRO ---
+        const form = document.getElementById('cadastro-form');
+        const mensagemDiv = document.getElementById('mensagem');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('nome').value;
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            mensagemDiv.className = 'hidden';
+
+            try {
+                const respuesta = await fetch('/cadastrar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, email, senha })
+                });
+                const dados = await respuesta.json();
+                if (resposta.ok) {
+                    mensagemDiv.textContent = dados.mensagem;
+                    mensagemDiv.className = 'sucesso';
+                    form.reset();
+                    
+                    // Opcional: Depois de cadastrar com sucesso, volta pro login após 2 segundos
+                    setTimeout(mostrarLogin, 2000);
+                } else {
+                    mensagemDiv.textContent = dados.erro;
+                    mensagemDiv.className = 'erro';
+                }
+            } catch (error) {
+                mensagemDiv.textContent = "Erro ao conectar com o servidor back-end.";
+                mensagemDiv.className = 'erro';
+            }
+        });
+
+        // --- SEU CÓDIGO JAVASCRIPT DE LOGIN ---
+        const loginForm = document.getElementById('login-form');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+
+            try {
+                const resposta = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+
+                const dados = await resposta.json();
+
+                if (resposta.ok) {
+                    window.location.href = 'paginainicial.html'; 
+                } else {
+                    alert(dados.erro);
+                }
+            } catch (error) {
+                alert("Erro ao conectar com o servidor.");
+            }
+        });
+    </script>
+</body>
+</html>
