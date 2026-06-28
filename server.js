@@ -88,7 +88,19 @@ app.post('/login', async (req, res) => {
     }
 });
 
+
+// Iniciar o servidor localmente APENAS se não estiver na Vercel
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(3000, () => {
+        console.log("Servidor rodando localmente em http://localhost:3000");
+    });
+}
+
+// Exportar para a Vercel usar como Serverless Function
+export default app;
+
 // Iniciar o servidor na porta 3000 (Sempre a última linha)
-app.listen(3000, () => {
+/* app.listen(3000, () => {
     console.log("Servidor rodando em http://localhost:3000");
-});
+}); */
+
