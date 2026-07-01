@@ -124,6 +124,7 @@
                 const dados = await resposta.json();
 
                 if (resposta.ok) {
+                    sessionStorage.setItem('usuarioLogado', 'true');
                     window.location.href = 'paginainicial.html'; 
                 } else {
                     alert(dados.erro);
