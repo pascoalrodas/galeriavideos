@@ -46,6 +46,27 @@
       border-radius: 8px;
     }
 
+    .botaoSair {
+    position: absolute;
+    top: 20px;     /* Distância do topo da tela */
+    right: 20px;   /* Distância da lateral direita da tela */
+    
+    /* Estilos estéticos opcionais para o botão ficar moderno */
+    padding: 8px 16px;
+    background-color: #dc3545; /* Cor vermelha padrão de "sair/alerta" */
+    color: #2796E9;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+/* Efeito ao passar o mouse */
+.botaoSair:hover {
+    background-color: #c82333;
+}
+
     /* Responsivo */
     @media (max-width: 768px) {
       iframe {
