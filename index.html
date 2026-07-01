@@ -83,12 +83,12 @@
             mensagemDiv.className = 'hidden';
 
             try {
-                const respuesta = await fetch('/cadastrar', {
+                const resposta = await fetch('/cadastrar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome, email, senha })
                 });
-                const dados = await respuesta.json();
+                const dados = await resposta.json();
                 if (resposta.ok) {
                     mensagemDiv.textContent = dados.mensagem;
                     mensagemDiv.className = 'sucesso';
@@ -106,7 +106,7 @@
             }
         });
 
-        // --- SEU CÓDIGO JAVASCRIPT DE LOGIN ---
+        // --- SEU CÓDIGO JAVASCRIPT DE LOGIN (COM SESSÃO ADICIONADA) ---
         const loginForm = document.getElementById('login-form');
 
         loginForm.addEventListener('submit', async (e) => {
@@ -124,6 +124,10 @@
                 const dados = await resposta.json();
 
                 if (resposta.ok) {
+                    // ✅ SALVA A SESSÃO APÓS LOGIN BEM SUCEDIDO
+                    sessionStorage.setItem('usuarioLogado', 'true');
+                    sessionStorage.setItem('emailUsuario', email); // Guarda o e-mail para usar depois
+
                     window.location.href = 'paginainicial.html'; 
                 } else {
                     alert(dados.erro);
