@@ -4,12 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Galeria de Vídeos</title>
+
+  <!-- ✅ VERIFICAÇÃO DE ACESSO - COLOQUE SEMPRE AQUI NO COMEÇO -->
+    <script>
+        // Se não houver sessão ativa, redireciona para o login
+        if (!sessionStorage.getItem('usuarioLogado')) {
+            alert('Acesso negado! Faça login primeiro.');
+            window.location.href = 'index.html';
+        }
+    </script>
+
   <link rel="stylesheet" href="styles.css">
   
 </head>
 <body>
 
   <h1>Galeria de Vídeos</h1>
+
+  !-- Botão para sair da conta -->
+    <button onclick="sairDaConta()">Sair</button>
+
+    <script>
+        // Função para encerrar a sessão
+        function sairDaConta() {
+            sessionStorage.removeItem('usuarioLogado');
+            sessionStorage.removeItem('emailUsuario');
+            window.location.href = 'index.html';
+        }
+    </script>
 
   <div class="gallery">
 
