@@ -1,4 +1,4 @@
- body {
+body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 20px;
@@ -7,12 +7,10 @@
 
     h1 {
     text-align: center;
-    font-size: 2.5rem; /* Aumenta um pouco o tamanho */
-    font-weight: 800; /* Deixa a fonte mais encorpada */
-    letter-spacing: -0.5px; /* Junta levemente as letras para um visual premium */
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
     margin-bottom: 40px;
-    
-    /* Efeito de Gradiente no Texto */
     background: linear-gradient(to right, #06b6d4, #3b82f6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -31,6 +29,7 @@
       padding: 15px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: relative; /* Importante para fullscreen */
     }
 
     .video-title {
@@ -39,37 +38,72 @@
       color: #2796E9;
     }
 
+    /* === NOVO: Wrapper para melhor controle do vídeo === */
+    .video-wrapper {
+      position: relative;
+      padding-top: 56.25%; /* Proporção 16:9 */
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Remove altura fixa do iframe antigo */
     iframe {
       width: 100%;
-      height: 500px;
       border: none;
       border-radius: 8px;
     }
 
     .botaoSair {
     position: absolute;
-    top: 20px;     /* Distância do topo da tela */
-    right: 20px;   /* Distância da lateral direita da tela */
-    
-    /* Estilos estéticos opcionais para o botão ficar moderno */
+    top: 20px;
+    right: 20px;
     padding: 8px 16px;
-    background-color: #dc3545; /* Cor vermelha padrão de "sair/alerta" */
+    background-color: #dc3545;
     color: #2796E9;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
     transition: background 0.3s;
-}
+    z-index: 100;
+    }
 
-/* Efeito ao passar o mouse */
-.botaoSair:hover {
-    background-color: #c82333;
-}
+    .botaoSair:hover {
+        background-color: #c82333;
+    }
 
     /* Responsivo */
     @media (max-width: 768px) {
-      iframe {
-        height: 350px;
+      .video-wrapper {
+        padding-top: 70%; /* Um pouco mais alto no celular */
       }
+    }
+
+    /* === ESTILOS PARA FULLSCREEN === */
+    .video-container:fullscreen,
+    .video-container:-webkit-full-screen,
+    .video-container:-moz-full-screen {
+      padding: 0;
+      margin: 0;
+      background: #000;
+      border-radius: 0;
+      max-width: none;
+      width: 100%;
+      height: 100vh;
+    }
+
+    .video-container:fullscreen .video-wrapper,
+    .video-container:-webkit-full-screen .video-wrapper {
+      padding-top: 100% !important; /* Preenche toda a tela */
+      border-radius: 0;
     }
