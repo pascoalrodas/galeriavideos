@@ -4,38 +4,410 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
+
+  
   <title>Galeria de Vídeos</title>
 
   <!-- VERIFICAÇÃO DE ACESSO -->
-  <script>
+   <script>
       if (!sessionStorage.getItem('usuarioLogado')) {
           alert('Acesso negado! Faça login primeiro.');
           window.location.href = 'index.html';
       }
-  </script>
+  </script> 
 
   <link rel="stylesheet" href="styles.css">
+  
+  <!-- Estilos adicionais para fullscreen e wrapper -->
+  <style>
+    .video-wrapper {
+      position: relative;
+      padding-top: 56.25%; /* Proporção 16:9 */
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Estilos para tela cheia */
+    .video-container:fullscreen,
+    .video-container:-webkit-full-screen,
+    .video-container:-moz-full-screen {
+      padding: 0 !important;
+      margin: 0 !important;
+      background: #000;
+      border-radius: 0;
+      max-width: none;
+      width: 100%;
+      height: 100vh;
+    }
+
+    .video-container:fullscreen .video-wrapper,
+    .video-container:-webkit-full-screen .video-wrapper {
+      padding-top: 100% !important;
+      border-radius: 0;
+    }
+  </style>
 </head>
 <body>
 
   <h1>Galeria de Vídeos</h1>
 
+  <!-- Botão para sair da conta -->
   <button class="botaoSair" onclick="sairDaConta()">Sair</button>
 
   <div class="gallery">
-    <!-- Seus vídeos (mantive todos) -->
+
+    <!-- Primeiro vídeo -->
     <div class="video-container">
       <h2 class="video-title">Magrinha dando cuzinho gostozinho</h2>
       <div class="video-wrapper">
-        <iframe src="https://www.xvideos.com/embedframe/kaukaibad30" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>
+        <iframe 
+          src="https://www.xvideos.com/embedframe/kaukaibad30" 
+          title="Vídeo 1"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
       </div>
     </div>
 
-    <!-- ... (os outros 30 vídeos continuam iguais) ... -->
-    <!-- Copie o restante dos <div class="video-container"> do seu arquivo atual -->
+    <!-- Segundo vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Estorou o cu da magrinha</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xvideos.com/embedframe/khdtcvf9a2c" 
+          title="Vídeo 2"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- Terceiro vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Com força anal</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xvideos.com/embedframe/kvmeeab66d4" 
+          title="Vídeo 3"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+    
+    <!-- Quarto vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Anal em pe</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xvideos.com/embedframe/ifdumom8515" 
+          title="Vídeo 4"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+    
+    <!-- Quinto vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Barulhinho</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xvideos.com/embedframe/hboookb2003"
+          title="Vídeo 5"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+    
+    <!-- Sexto vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Ai meu cu</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xvideos.com/embedframe/uduiuem09f3"
+          title="Vídeo 6"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- Sétimo vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Hardcore é a mais ampla das categorias de pornografia</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xnxx.com/embedframe/uflcedff8c9"
+          title="Vídeo 7"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 8º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Sexy ebony especial torna-se Hardcore ANAL</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xnxx.com/embedframe/iovfhfu0a52"
+          title="Vídeo 8"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 9º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Bastidores com a ninfeta Bibi Sadomasoquista - Cena completa no Red</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xnxx.com/embedframe/oodfcmad0d2"
+          title="Vídeo 9"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 10º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Título do Segundo Vídeo</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xvideos.com/embedframe/uduiuem09f3"
+          title="Vídeo 10"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 11º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Agarrei a novinha de bruços e comi o cu até encher de porra - Gaucholuiz e Santinha Safadinha</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xvideos.com/embedframe/uteeftm8d90"
+          title="Vídeo 11"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 12º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Por favor, goze, dói! A pequena loira leva uma bunda fodida de Wicked Fellow</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xvideos.com/embedframe/kdamlbv5ad7"
+          title="Vídeo 12"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 13º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Carter Cruise amarrado e fudido anal por Mr Pete NO MERCY</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xvideos.com/embedframe/kamumid1cf0"
+          title="Vídeo 13"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 14º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">O Melhor Orgasmo Anal</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xvideos.com/embedframe/fthcid4544"
+          title="Vídeo 14"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 15º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Arrombando o cu da novinha com consolo gigante</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xvideos.com/embedframe/hphbbao2553"
+          title="Vídeo 15"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 16º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">faz anal e leva gozada dentro do cu</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xvideos.com/embedframe/ududduv491d"
+          title="Vídeo 16"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 17º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Sexo em grupo com um flexível</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xnxx.com/embedframe/uclmfhm6b5a"
+          title="Vídeo 17"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 18º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Total extremo anal busto aberto</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xnxx.com/embedframe/ulplvvf545f"
+          title="Vídeo 18"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 19º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">extreme-deep-anal-fisting</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xnxx.com/embedframe/hlumc083"
+          title="Vídeo 19"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 20º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Latina quente anal</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xnxx.com/embedframe/ikcfuodd7ee"
+          title="Vídeo 20"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- 21º vídeo -->
+    <div class="video-container">
+      <h2 class="video-title">Punho profundo no cotovelo e barriga protuberante lésbica</h2>
+      <div class="video-wrapper">
+        <iframe 
+          src="https://www.xnxx.com/embedframe/okiliahe04c"
+          title="Vídeo 21"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation">
+        </iframe>
+      </div>
+    </div>
 
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    // Função para encerrar a sessão
+    function sairDaConta() {
+      sessionStorage.removeItem('usuarioLogado');
+      sessionStorage.removeItem('emailUsuario');
+      window.location.href = 'index.html';
+    }
+
+    // Controle de Fullscreen + Orientação Landscape
+    function handleFullscreenChange() {
+      if (document.fullscreenElement || 
+          document.webkitFullscreenElement || 
+          document.mozFullScreenElement) {
+        
+        // Tenta forçar modo paisagem
+        if (screen.orientation && typeof screen.orientation.lock === 'function') {
+          screen.orientation.lock('landscape').catch(() => {});
+        }
+      } else {
+        // Volta para orientação normal
+        if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+          screen.orientation.unlock();
+        }
+      }
+    }
+
+    // Monitora mudanças de fullscreen
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+
+    // Clique duplo no vídeo para ativar/desativar fullscreen
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.video-container').forEach(container => {
+        container.addEventListener('dblclick', () => {
+          if (!document.fullscreenElement) {
+            container.requestFullscreen().catch(err => {
+              console.log('Erro ao entrar em fullscreen:', err);
+            });
+          } else {
+            document.exitFullscreen();
+          }
+        });
+      });
+    });
+  </script>
+
 </body>
 </html>
