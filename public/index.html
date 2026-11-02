@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso - Galeria de Vídeos</title>
+    <link rel="stylesheet" href="/login.css">
+</head>
+<body>
+
+    <header class="topo">
+        <div class="marca">
+            <h1>Galeria de Vídeos</h1>
+            <p>Acesso à sua coleção</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="card" id="card-login">
+            <h2>Acessar Galeria</h2>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="login-email">E-mail</label>
+                    <input type="email" id="login-email" required placeholder="seu@email.com" autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <label for="login-senha">Senha</label>
+                    <input type="password" id="login-senha" required placeholder="Sua senha" autocomplete="current-password">
+                </div>
+                <button type="submit" style="background-color: #10b981;">Entrar</button>
+            </form>
+            <div id="mensagem-login" class="hidden"></div>
+            <div class="alternar-link">
+                <!-- Não tem uma conta? <a onclick="mostrarCadastro()">Criar conta</a> -->
+            </div>
+        </div>
+
+        <div class="card escondido" id="card-cadastro">
+            <h2>Criar Conta</h2>
+            <form id="cadastro-form">
+                <div class="input-group">
+                    <label for="nome">Nome</label>
+                    <input type="text" id="nome" required placeholder="Seu nome" autocomplete="name">
+                </div>
+                <div class="input-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" required placeholder="seu@email.com" autocomplete="email">
+                </div>
+                <div class="input-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" required minlength="6" placeholder="Mínimo de 6 caracteres" autocomplete="new-password">
+                </div>
+                <button type="submit">Cadastrar</button>
+            </form>
+            <div id="mensagem" class="hidden"></div>
+            <div class="alternar-link">
+                Já tem uma conta? <a onclick="mostrarLogin()">Acessar conta</a>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="rodape">
+        <p class="rodape-titulo">Galeria de Vídeos</p>
+        <p>Sua conta abre a coleção e guarda os vídeos inseridos.</p>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

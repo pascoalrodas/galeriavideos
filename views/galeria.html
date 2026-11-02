@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Galeria de Vídeos</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <header class="topo">
+    <h1>Galeria de Vídeos</h1>
+    <div class="barra-acoes">
+      <button type="button" class="botao-inserir" id="abrir-inserir" aria-expanded="false" aria-controls="form-video">Inserir vídeo</button>
+      <button class="botaoSair" type="button" id="sair">Sair</button>
+    </div>
+  </header>
+
+  <form id="form-video" class="painel-inserir escondido">
+    <label for="titulo-video">Título</label>
+    <input type="text" id="titulo-video" name="titulo" required maxlength="180" placeholder="Nome do vídeo" autocomplete="off">
+    <label for="iframe-video">Código do iframe</label>
+    <textarea id="iframe-video" name="iframe" required maxlength="4000" placeholder='<iframe src="https://www.xvideos.com/embedframe/..." frameborder=0 width=510 height=400 scrolling=no allowfullscreen=allowfullscreen></iframe>'></textarea>
+    <button type="submit" class="botao-salvar">Salvar vídeo</button>
+    <p id="mensagem-video" class="mensagem-video" role="status"></p>
+  </form>
+
+  <main class="gallery">
+    {{GRADE}}
+  </main>
+
+  <footer class="rodape">
+    <p>Sua coleção particular. Os vídeos inseridos aqui ficam salvos na galeria.</p>
+  </footer>
+
+  <script src="/galeria.js"></script>
+</body>
+</html>

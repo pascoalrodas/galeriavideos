@@ -1,0 +1,8 @@
+# Ignorar o arquivo de credenciais do projeto
+credencial.md
+
+# Ignorar a pasta de pacotes do Node (ela é muito pesada e não deve ir pro GitHub)
+node_modules/
+
+# Caso você decida criar um arquivo .env no futuro:
+.env
