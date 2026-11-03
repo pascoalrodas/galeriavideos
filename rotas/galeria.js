@@ -4,6 +4,7 @@ import { VideoDuplicado } from '../lib/repositorio-videos.js';
 
 const TITULO_MAX = 180;
 const IFRAME_MAX = 4000;
+const POLITICA_FRAME = 'frame-src https://www.xvideos.com/embedframe/ https://www.xnxx.com/embedframe/';
 
 function exigirSessao(sessao, req, res) {
   if (sessao.ler(req)) return true;
@@ -32,6 +33,7 @@ export function registrarRotasGaleria(app, { repositorio, sessao, template }) {
     const grade = videos.length
       ? montarGrade(videos)
       : '<p class="galeria-vazia">Nenhum vídeo na galeria.</p>';
+    res.set('Content-Security-Policy', POLITICA_FRAME);
     res.type('html').send(template.replace('{{GRADE}}', () => grade));
   });
 
