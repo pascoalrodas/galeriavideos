@@ -137,6 +137,10 @@ function montarPlayer(wrapper) {
   const frame = document.createElement('iframe');
   frame.dataset.embed = src;
   frame.title = titulo;
+  frame.setAttribute(
+    'sandbox',
+    'allow-scripts allow-same-origin allow-presentation allow-forms'
+  );
   frame.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture; accelerometer; gyroscope; clipboard-write';
   frame.allowFullscreen = true;
   frame.setAttribute('webkitallowfullscreen', '');
