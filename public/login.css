@@ -1,0 +1,165 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #0f172a; /* Um tom escuro moderno */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    color: #f8fafc;
+}
+
+.topo {
+    padding: 1.15rem 1.25rem 0.85rem;
+    text-align: center;
+    border-bottom: 1px solid #1e293b;
+}
+
+.marca h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    background: linear-gradient(to right, #06b6d4, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.marca p {
+    margin: 0.35rem 0 0;
+    color: #94a3b8;
+    font-size: 0.95rem;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 1.25rem;
+}
+
+.rodape {
+    padding: 0.85rem 1.5rem 1rem;
+    border-top: 1px solid #1e293b;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.rodape p {
+    margin: 0.2rem 0;
+}
+
+.rodape-titulo {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.card {
+    background: #1e293b; /* Fundo do formulário ligeiramente mais claro */
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 400px;
+    color: #f8fafc;
+}
+
+h2 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+.input-group {
+    margin-bottom: 1.2rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.4rem;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+input {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    font-size: 1rem;
+    color: #ffffff;
+    transition: border-color 0.2s;
+}
+
+input:focus {
+    outline: none;
+    border-color: #06b6d4; /* Cor turquesa que lembra o Turso */
+}
+
+button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #06b6d4;
+    color: #0f172a;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+    margin-top: 0.5rem;
+}
+
+button:hover {
+    background-color: #0891b2;
+}
+
+#mensagem {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.sucesso {
+    background-color: #065f46;
+    color: #34d399;
+}
+
+.erro {
+    background-color: #7f1d1d;
+    color: #f87171;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Regra simples para esconder o card que não deve aparecer */
+        .escondido {
+            display: none !important;
+        }
+        .alternar-link {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        .alternar-link a {
+            color: #06b6d4;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .alternar-link a:hover {
+            text-decoration: underline;
+        }
