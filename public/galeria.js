@@ -118,9 +118,24 @@ function criarFachada(titulo, capa) {
   return botao;
 }
 
+function criarBotaoTelaCheia() {
+  const botao = document.createElement('button');
+  botao.type = 'button';
+  botao.className = 'botao-tela-cheia';
+  botao.setAttribute('aria-label', 'Tela cheia');
+  botao.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>';
+  return botao;
+}
+
+function trocarMidia(wrapper, no) {
+  const telaCheia = wrapper.querySelector('.botao-tela-cheia');
+  wrapper.replaceChildren(no);
+  wrapper.append(telaCheia || criarBotaoTelaCheia());
+}
+
 function restaurarFachada(wrapper) {
   const titulo = wrapper.closest('.video-container')?.querySelector('.video-title')?.textContent || 'Vídeo';
-  wrapper.replaceChildren(criarFachada(titulo, wrapper.dataset.capa));
+  trocarMidia(wrapper, criarFachada(titulo, wrapper.dataset.capa));
 }
 
 function montarPlayer(wrapper) {
@@ -147,7 +162,7 @@ function montarPlayer(wrapper) {
   frame.setAttribute('mozallowfullscreen', '');
   frame.referrerPolicy = 'strict-origin-when-cross-origin';
   frame.src = src;
-  wrapper.replaceChildren(frame);
+  trocarMidia(wrapper, frame);
 }
 
 function cancelarPlayerPendente() {
@@ -179,7 +194,56 @@ galeria.addEventListener('pointerover', (event) => {
   preconectar(wrapper.dataset.src);
 });
 
+function pedirTelaCheia(elemento) {
+  const pedir = elemento.requestFullscreen
+    || elemento.webkitRequestFullscreen
+    || elemento.mozRequestFullScreen;
+  if (!pedir) return Promise.reject(new Error('sem tela cheia'));
+  try {
+    return Promise.resolve(pedir.call(elemento));
+  } catch (erro) {
+    return Promise.reject(erro);
+  }
+}
+
+function alternarTelaCheia(container) {
+  cancelarPlayerPendente();
+  const wrapper = container.querySelector('.video-wrapper');
+  if (wrapper) montarPlayer(wrapper);
+  const cheia = document.fullscreenElement
+    || document.webkitFullscreenElement
+    || document.mozFullScreenElement;
+  if (cheia) {
+    const sair = document.exitFullscreen
+      || document.webkitExitFullscreen
+      || document.mozCancelFullScreen;
+    if (!sair) return;
+    try {
+      Promise.resolve(sair.call(document)).catch(() => {});
+    } catch {
+      // o navegador recusou sair da tela cheia
+    }
+    return;
+  }
+  pedirTelaCheia(container).catch(() => {
+    const frame = container.querySelector('iframe');
+    if (frame) pedirTelaCheia(frame).catch(() => {});
+  });
+}
+
+galeria.querySelectorAll('.video-wrapper').forEach((wrapper) => {
+  if (!wrapper.querySelector('.botao-tela-cheia')) wrapper.append(criarBotaoTelaCheia());
+});
+
 galeria.addEventListener('click', async (event) => {
+  const telaCheia = event.target.closest('.botao-tela-cheia');
+  if (telaCheia) {
+    if (event.detail > 1) return;
+    const container = telaCheia.closest('.video-container');
+    if (container) alternarTelaCheia(container);
+    return;
+  }
+
   const fachada = event.target.closest('.video-facade');
   if (fachada) {
     const wrapper = fachada.closest('.video-wrapper');
@@ -224,6 +288,10 @@ function aoMudarTelaCheia() {
   const cheia = document.fullscreenElement
     || document.webkitFullscreenElement
     || document.mozFullScreenElement;
+  document.querySelectorAll('.botao-tela-cheia').forEach((botao) => {
+    const ativo = Boolean(cheia) && botao.closest('.video-container') === cheia;
+    botao.setAttribute('aria-label', ativo ? 'Sair da tela cheia' : 'Tela cheia');
+  });
   if (cheia) {
     if (screen.orientation && typeof screen.orientation.lock === 'function') {
       screen.orientation.lock('landscape').catch(() => {});
@@ -240,15 +308,8 @@ document.addEventListener('webkitfullscreenchange', aoMudarTelaCheia);
 document.addEventListener('mozfullscreenchange', aoMudarTelaCheia);
 
 galeria.addEventListener('dblclick', (event) => {
-  if (toqueDireto(event) || event.target.closest('.botao-excluir')) return;
+  if (toqueDireto(event) || event.target.closest('.botao-excluir, .botao-tela-cheia')) return;
   const container = event.target.closest('.video-container');
   if (!container) return;
-  cancelarPlayerPendente();
-  const wrapper = container.querySelector('.video-wrapper');
-  if (wrapper) montarPlayer(wrapper);
-  if (!document.fullscreenElement) {
-    container.requestFullscreen().catch(() => {});
-  } else {
-    document.exitFullscreen();
-  }
+  alternarTelaCheia(container);
 });
