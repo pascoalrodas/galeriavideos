@@ -46,6 +46,90 @@ function tipoDoArquivo(arquivo) {
   return TIPOS_ARQUIVO.get(extensao) || '';
 }
 
+function quadroCliente(valor) {
+  const numero = Number(valor);
+  if (!Number.isFinite(numero) || numero < 0.2 || numero > 5) return null;
+  return String(Number(numero.toFixed(4)));
+}
+
+function capturarQuadro(src, aoMedir, aoExibir) {
+  const video = document.createElement('video');
+  video.muted = true;
+  video.defaultMuted = true;
+  video.playsInline = true;
+  video.preload = 'auto';
+  video.setAttribute('playsinline', '');
+  if (!String(src).startsWith('blob:')) video.crossOrigin = 'anonymous';
+  let encerrado = false;
+
+  return new Promise((resolve, reject) => {
+    const limite = setTimeout(() => finalizar(new Error('tempo')), 25000);
+
+    function finalizar(erro, valor) {
+      if (encerrado) return;
+      encerrado = true;
+      clearTimeout(limite);
+      if (erro) {
+        if (!video.isConnected) {
+          video.pause();
+          video.removeAttribute('src');
+          video.load();
+        }
+        reject(erro);
+        return;
+      }
+      resolve(valor);
+    }
+
+    video.addEventListener('error', () => finalizar(new Error('video')), { once: true });
+    video.addEventListener('loadedmetadata', () => {
+      if (!video.videoWidth || !video.videoHeight) {
+        finalizar(new Error('sem quadro'));
+        return;
+      }
+      const quadro = quadroCliente(video.videoWidth / video.videoHeight);
+      if (!quadro) {
+        finalizar(new Error('sem quadro'));
+        return;
+      }
+      aoMedir?.(video.videoWidth / video.videoHeight);
+      aoExibir?.(video);
+      const destino = Number.isFinite(video.duration) && video.duration > 0.5 ? 0.5 : 0;
+      const desenhar = () => {
+        try {
+          const escala = Math.min(1, 960 / Math.max(video.videoWidth, video.videoHeight));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(video.videoWidth * escala));
+          canvas.height = Math.max(1, Math.round(video.videoHeight * escala));
+          const contexto = canvas.getContext('2d', { alpha: false });
+          contexto.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              finalizar(new Error('sem imagem'));
+              return;
+            }
+            finalizar(null, { blob, quadro });
+          }, 'image/jpeg', 0.82);
+        } catch (erro) {
+          finalizar(erro);
+        }
+      };
+      if (destino === 0) {
+        if (video.readyState >= 2) desenhar();
+        else video.addEventListener('loadeddata', desenhar, { once: true });
+        return;
+      }
+      video.addEventListener('seeked', desenhar, { once: true });
+      try {
+        video.currentTime = destino;
+      } catch (erro) {
+        finalizar(erro);
+      }
+    }, { once: true });
+    video.src = src;
+  });
+}
+
 async function enviarArquivo(botao) {
   const arquivo = arquivoInput.files?.[0];
   if (!arquivo) {
@@ -63,6 +147,17 @@ async function enviarArquivo(botao) {
     mensagem.textContent = 'O arquivo passa de 2 GB.';
     mensagem.classList.add('erro');
     return;
+  }
+
+  mensagem.textContent = 'Preparando a capa...';
+  let previa = null;
+  const local = URL.createObjectURL(arquivo);
+  try {
+    previa = await capturarQuadro(local);
+  } catch {
+    previa = null;
+  } finally {
+    URL.revokeObjectURL(local);
   }
 
   mensagem.textContent = 'Enviando o arquivo...';
@@ -103,6 +198,10 @@ async function enviarArquivo(botao) {
     mensagem.textContent = salvo.erro || 'Não foi possível salvar o vídeo.';
     mensagem.classList.add('erro');
     return;
+  }
+  if (previa) {
+    mensagem.textContent = 'Guardando a capa...';
+    await guardarCapa(salvo.id, previa.blob, previa.quadro);
   }
   botao.disabled = true;
   window.location.reload();
@@ -196,12 +295,29 @@ function capaSegura(valor) {
   return url.href;
 }
 
+function urlCapaR2(valor) {
+  let url;
+  try {
+    url = new URL(valor);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'https:' || !url.hostname.endsWith('.r2.cloudflarestorage.com')) return null;
+  if (url.username || url.password || url.port || url.hash) return null;
+  if (!/\.jpe?g$/i.test(url.pathname)) return null;
+  return url.href;
+}
+
+function capaAceita(valor) {
+  return capaSegura(valor) || urlCapaR2(valor);
+}
+
 function criarFachada(titulo, capa) {
   const botao = document.createElement('button');
   botao.type = 'button';
   botao.className = 'video-facade';
   botao.setAttribute('aria-label', `Assistir: ${titulo}`);
-  const segura = capaSegura(capa);
+  const segura = capaAceita(capa);
   if (segura) {
     const imagem = document.createElement('img');
     imagem.className = 'video-capa';
@@ -237,10 +353,41 @@ function trocarMidia(wrapper, no) {
   wrapper.append(telaCheia || criarBotaoTelaCheia());
 }
 
+function aplicarQuadro(wrapper) {
+  const quadro = quadroCliente(wrapper.dataset.quadro);
+  if (!quadro) {
+    wrapper.classList.remove('video-arquivo');
+    wrapper.style.removeProperty('--quadro');
+    return;
+  }
+  wrapper.dataset.quadro = quadro;
+  wrapper.style.setProperty('--quadro', quadro);
+  wrapper.classList.add('video-arquivo');
+}
+
+function mostrarCapa(wrapper, url) {
+  const fachada = wrapper.querySelector('.video-facade');
+  if (!fachada) return;
+  fachada.querySelectorAll('video.video-capa').forEach((previa) => {
+    previa.pause();
+    previa.removeAttribute('src');
+    previa.load();
+    previa.remove();
+  });
+  let imagem = fachada.querySelector('img.video-capa');
+  if (!imagem) {
+    imagem = document.createElement('img');
+    imagem.className = 'video-capa';
+    imagem.alt = '';
+    imagem.decoding = 'async';
+    fachada.prepend(imagem);
+  }
+  imagem.src = url;
+}
+
 function restaurarFachada(wrapper) {
   wrapper.dataset.abertura = '';
-  wrapper.classList.remove('video-arquivo');
-  wrapper.style.removeProperty('--quadro');
+  aplicarQuadro(wrapper);
   const tituloVideo = wrapper.closest('.video-container')?.querySelector('.video-title')?.textContent || 'Vídeo';
   trocarMidia(wrapper, criarFachada(tituloVideo, wrapper.dataset.capa));
 }
@@ -260,6 +407,29 @@ function urlArquivoSegura(valor) {
   }
   if (url.protocol !== 'https:' || !url.hostname.endsWith('.r2.cloudflarestorage.com')) return null;
   return url.href;
+}
+
+async function guardarCapa(id, blob, quadro) {
+  const preparo = await fetch(`/videos/${id}/capa`, { method: 'POST' });
+  const dados = await preparo.json().catch(() => ({}));
+  if (!preparo.ok) return null;
+  if (dados.pronta) return urlCapaR2(dados.url);
+  const destino = urlArquivoSegura(dados.url);
+  if (!destino || !dados.chave) return null;
+  const envio = await fetch(destino, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'image/jpeg' },
+    body: blob
+  });
+  if (!envio.ok) return null;
+  const confirmacao = await fetch(`/videos/${id}/capa/confirmar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chave: dados.chave, quadro })
+  });
+  const salvo = await confirmacao.json().catch(() => ({}));
+  if (!confirmacao.ok) return null;
+  return urlCapaR2(salvo.url);
 }
 
 async function montarArquivo(wrapper) {
@@ -284,10 +454,13 @@ async function montarArquivo(wrapper) {
     const video = document.createElement('video');
     video.controls = true;
     video.playsInline = true;
+    const poster = capaAceita(wrapper.dataset.capa);
+    if (poster) video.poster = poster;
     video.addEventListener('loadedmetadata', () => {
-      if (!video.videoWidth || !video.videoHeight) return;
-      wrapper.style.setProperty('--quadro', String(video.videoWidth / video.videoHeight));
-      wrapper.classList.add('video-arquivo');
+      const quadro = quadroCliente(video.videoWidth / video.videoHeight);
+      if (!quadro) return;
+      wrapper.dataset.quadro = quadro;
+      aplicarQuadro(wrapper);
     });
     video.src = seguro;
     trocarMidia(wrapper, video);
@@ -497,6 +670,49 @@ function aoMudarTelaCheia() {
 document.addEventListener('fullscreenchange', aoMudarTelaCheia);
 document.addEventListener('webkitfullscreenchange', aoMudarTelaCheia);
 document.addEventListener('mozfullscreenchange', aoMudarTelaCheia);
+
+async function preencherCapasArquivo() {
+  const pendentes = [...galeria.querySelectorAll('.video-wrapper[data-origem="arquivo"]')]
+    .filter((wrapper) => !wrapper.querySelector('.video-capa'));
+  for (const wrapper of pendentes) {
+    if (wrapper.dataset.capa) continue;
+    const id = wrapper.closest('.video-container')?.dataset.id;
+    if (!id) continue;
+    try {
+      const resposta = await fetch(`/videos/${id}/reproducao`);
+      const dados = await resposta.json().catch(() => ({}));
+      const seguro = urlArquivoSegura(dados.url);
+      if (!resposta.ok || !seguro || wrapper.querySelector('.video-capa')) continue;
+      const { blob, quadro } = await capturarQuadro(seguro, (proporcao) => {
+        const medido = quadroCliente(proporcao);
+        if (!medido || wrapper.dataset.quadro) return;
+        wrapper.dataset.quadro = medido;
+        aplicarQuadro(wrapper);
+      }, (video) => {
+        if (!wrapper.querySelector('.video-facade') || wrapper.querySelector('.video-capa')) return;
+        video.className = 'video-capa';
+        video.controls = false;
+        wrapper.querySelector('.video-facade').prepend(video);
+      });
+      if (!wrapper.isConnected) continue;
+      wrapper.dataset.quadro = quadro;
+      aplicarQuadro(wrapper);
+      const local = URL.createObjectURL(blob);
+      mostrarCapa(wrapper, local);
+      const remota = await guardarCapa(id, blob, quadro);
+      if (remota) {
+        wrapper.dataset.capa = remota;
+        mostrarCapa(wrapper, remota);
+      }
+      URL.revokeObjectURL(local);
+    } catch {
+      // a visita continua sem capa quando o quadro não pode ser lido
+    }
+  }
+}
+
+galeria.querySelectorAll('.video-wrapper[data-quadro]').forEach(aplicarQuadro);
+preencherCapasArquivo();
 
 galeria.addEventListener('dblclick', (event) => {
   if (toqueDireto(event) || event.target.closest('.botao-excluir, .botao-fechar, .botao-tela-cheia')) return;
