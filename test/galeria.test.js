@@ -11,10 +11,33 @@ test('monta o card, o botão de excluir e escapa o título', () => {
   assert.match(html, /aria-label="Assistir: Tom &amp; &lt;Jerry&gt;"/);
   assert.match(html, /class="video-facade"/);
   assert.match(html, /class="botao-excluir" data-id="4"/);
+  assert.match(html, /class="botao-fechar"/);
+  assert.match(html, /aria-label="Fechar vídeo"/);
+  assert.match(html, /class="video-rodape"/);
+  assert.ok(html.indexOf('botao-fechar') < html.indexOf('video-wrapper'));
+  assert.ok(html.indexOf('video-wrapper') < html.lastIndexOf('botao-excluir'));
+  assert.match(html, /class="botao-tela-cheia"/);
+  assert.match(html, /aria-label="Tela cheia"/);
   assert.doesNotMatch(html, /<iframe/);
   assert.doesNotMatch(html, /autoplay/);
   assert.doesNotMatch(html, /<Jerry>/);
   assert.doesNotMatch(html, /video-capa/);
+});
+
+test('arquivo fica sem o endereço interno e sem capa', () => {
+  const html = montarGrade([
+    {
+      id: 8,
+      titulo: 'Enviado',
+      src: 'r2:videos/11111111-1111-1111-1111-111111111111.mp4'
+    }
+  ]);
+  assert.match(html, /data-origem="arquivo"/);
+  assert.match(html, /class="botao-fechar"/);
+  assert.match(html, /class="botao-excluir" data-id="8"/);
+  assert.doesNotMatch(html, /r2:videos/);
+  assert.doesNotMatch(html, /data-src=/);
+  assert.doesNotMatch(html, /<video/);
 });
 
 test('mostra a capa quando o endereço da imagem é do cdn', () => {

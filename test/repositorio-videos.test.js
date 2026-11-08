@@ -74,3 +74,23 @@ test('guarda a capa uma vez e não repete a busca', async () => {
 
   banco.close();
 });
+
+test('arquivo gravado não busca capa', async () => {
+  const banco = bancoMemoria();
+  let chamadas = 0;
+  const repositorio = criarRepositorioVideos(banco, {
+    buscarCapa: async () => {
+      chamadas += 1;
+      return 'https://thumb-cdn77.xvideos-cdn.com/abc/0/xv_20_t.jpg';
+    }
+  });
+  const novo = await repositorio.inserir({
+    titulo: 'Local',
+    src: 'r2:videos/11111111-1111-1111-1111-111111111111.mp4'
+  });
+  assert.equal(novo.poster, null);
+  await repositorio.listar();
+  assert.equal(chamadas, 0);
+  assert.equal((await repositorio.obter(novo.id)).titulo, 'Local');
+  banco.close();
+});
