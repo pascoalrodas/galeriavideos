@@ -239,6 +239,8 @@ function trocarMidia(wrapper, no) {
 
 function restaurarFachada(wrapper) {
   wrapper.dataset.abertura = '';
+  wrapper.classList.remove('video-arquivo');
+  wrapper.style.removeProperty('--quadro');
   const tituloVideo = wrapper.closest('.video-container')?.querySelector('.video-title')?.textContent || 'Vídeo';
   trocarMidia(wrapper, criarFachada(tituloVideo, wrapper.dataset.capa));
 }
@@ -282,6 +284,11 @@ async function montarArquivo(wrapper) {
     const video = document.createElement('video');
     video.controls = true;
     video.playsInline = true;
+    video.addEventListener('loadedmetadata', () => {
+      if (!video.videoWidth || !video.videoHeight) return;
+      wrapper.style.setProperty('--quadro', String(video.videoWidth / video.videoHeight));
+      wrapper.classList.add('video-arquivo');
+    });
     video.src = seguro;
     trocarMidia(wrapper, video);
     video.play().catch(() => {});
