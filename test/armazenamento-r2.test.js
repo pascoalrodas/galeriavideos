@@ -25,4 +25,3 @@ test('assina envio e leitura no bucket da galeria', async () => {
   assert.equal(leitura.searchParams.get('X-Amz-Expires'), '3600');
   assert.equal(leitura.searchParams.get('X-Amz-SignedHeaders'), 'host');
 });
-
