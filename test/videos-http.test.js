@@ -13,7 +13,7 @@ function cookieDe(resposta) {
   return lista[0].split(';')[0];
 }
 
-async function subir() {
+async function subir({ armazenamento = null } = {}) {
   const banco = createClient({ url: ':memory:' });
   await banco.execute(`
     CREATE TABLE utilizadores (
@@ -29,7 +29,8 @@ async function subir() {
     cadastroLiberado: true,
     videosIniciais: [
       { titulo: 'Já estava', src: 'https://www.xvideos.com/embedframe/aaa111' }
-    ]
+    ],
+    armazenamento
   });
   const servidor = await new Promise((resolve) => {
     const escuta = app.listen(0, () => resolve(escuta));
@@ -73,6 +74,10 @@ test('insere pelo iframe e exclui o vídeo da galeria', async () => {
     const pagina = await fetch(`${base}/galeria`, { headers: { cookie } });
     const html = await pagina.text();
     assert.equal(pagina.status, 200);
+    assert.equal(
+      pagina.headers.get('content-security-policy'),
+      'frame-src https://www.xvideos.com/embedframe/ https://www.xnxx.com/embedframe/'
+    );
     assert.match(html, /Inserir vídeo/);
     assert.match(html, /Já estava/);
     assert.match(html, /botao-excluir/);
@@ -112,6 +117,151 @@ test('insere pelo iframe e exclui o vídeo da galeria', async () => {
     const htmlDepois = await depois.text();
     assert.match(htmlDepois, /Já estava/);
     assert.doesNotMatch(htmlDepois, /Cola do iframe/);
+  } finally {
+    await new Promise((resolve, reject) => {
+      servidor.close((error) => (error ? reject(error) : resolve()));
+    });
+    banco.close();
+  }
+});
+
+function armazenamentoMemoria() {
+  const objetos = new Map();
+  return {
+    objetos,
+    async urlEnvio({ chave, tipo }) {
+      return `https://galeria-de-videos.exemplo.r2.cloudflarestorage.com/${chave}?tipo=${encodeURIComponent(tipo)}`;
+    },
+    async urlLeitura(chave) {
+      return `https://galeria-de-videos.exemplo.r2.cloudflarestorage.com/${chave}?leitura=1`;
+    },
+    async detalhes(chave) {
+      return objetos.get(chave) || null;
+    },
+    async excluir(chave) {
+      objetos.delete(chave);
+    }
+  };
+}
+
+test('envia um arquivo, reproduz e apaga o objeto', async () => {
+  const armazenamento = armazenamentoMemoria();
+  const { banco, servidor, base } = await subir({ armazenamento });
+  try {
+    const cadastro = await fetch(`${base}/cadastrar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome: 'Teste', email: 'arquivo@exemplo.com', senha: 'senha-forte' })
+    });
+    assert.equal(cadastro.status, 201);
+    const login = await fetch(`${base}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'arquivo@exemplo.com', senha: 'senha-forte' })
+    });
+    const cookie = cookieDe(login);
+
+    const semConfig = await fetch(`${base}/videos/envio`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ titulo: 'Sem', tipo: 'video/mp4', tamanho: 10 })
+    });
+    assert.equal(semConfig.status, 401);
+
+    const tipoRuim = await fetch(`${base}/videos/envio`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', cookie },
+      body: JSON.stringify({ titulo: 'Ruim', tipo: 'video/avi', tamanho: 10 })
+    });
+    assert.equal(tipoRuim.status, 400);
+
+    const grande = await fetch(`${base}/videos/envio`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', cookie },
+      body: JSON.stringify({ titulo: 'Grande', tipo: 'video/mp4', tamanho: (2 * 1024 * 1024 * 1024) + 1 })
+    });
+    assert.equal(grande.status, 400);
+
+    const preparo = await fetch(`${base}/videos/envio`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', cookie },
+      body: JSON.stringify({ titulo: 'Caseiro', tipo: 'video/mp4', tamanho: 1200 })
+    });
+    assert.equal(preparo.status, 200);
+    const envio = await preparo.json();
+    assert.match(envio.chave, /^videos\/[0-9a-f-]{36}\.mp4$/);
+    assert.match(envio.url, /galeria-de-videos\.exemplo\.r2\.cloudflarestorage\.com/);
+
+    const cedo = await fetch(`${base}/videos/arquivo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', cookie },
+      body: JSON.stringify({ titulo: 'Caseiro', chave: envio.chave })
+    });
+    assert.equal(cedo.status, 400);
+
+    armazenamento.objetos.set(envio.chave, { tamanho: 1200, tipo: 'video/mp4' });
+    const criado = await fetch(`${base}/videos/arquivo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', cookie },
+      body: JSON.stringify({ titulo: 'Caseiro', chave: envio.chave })
+    });
+    assert.equal(criado.status, 201);
+    const video = await criado.json();
+    assert.equal(video.origem, 'arquivo');
+    assert.equal(video.src, undefined);
+
+    const pagina = await fetch(`${base}/galeria`, { headers: { cookie } });
+    const html = await pagina.text();
+    assert.match(html, /data-origem="arquivo"/);
+    assert.match(html, /botao-fechar/);
+    assert.match(html, /Arquivo/);
+    assert.doesNotMatch(html, new RegExp(envio.chave));
+
+    const reproducao = await fetch(`${base}/videos/${video.id}/reproducao`, { headers: { cookie } });
+    assert.equal(reproducao.status, 200);
+    assert.equal(reproducao.headers.get('cache-control'), 'no-store');
+    const midia = await reproducao.json();
+    assert.match(midia.url, /leitura=1/);
+
+    const embed = await fetch(`${base}/galeria`, { headers: { cookie } });
+    const idEmbed = (await embed.text()).match(/data-src="https:\/\/www\.xvideos\.com\/embedframe\/aaa111"/);
+    assert.ok(idEmbed);
+
+    const exclusao = await fetch(`${base}/videos/${video.id}`, {
+      method: 'DELETE',
+      headers: { cookie }
+    });
+    assert.equal(exclusao.status, 204);
+    assert.equal(armazenamento.objetos.has(envio.chave), false);
+  } finally {
+    await new Promise((resolve, reject) => {
+      servidor.close((error) => (error ? reject(error) : resolve()));
+    });
+    banco.close();
+  }
+});
+
+test('recusa envio de arquivo quando o armazenamento não está configurado', async () => {
+  const { banco, servidor, base } = await subir();
+  try {
+    const cadastro = await fetch(`${base}/cadastrar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome: 'Teste', email: 'sem-r2@exemplo.com', senha: 'senha-forte' })
+    });
+    assert.equal(cadastro.status, 201);
+    const login = await fetch(`${base}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'sem-r2@exemplo.com', senha: 'senha-forte' })
+    });
+    const cookie = cookieDe(login);
+    const resposta = await fetch(`${base}/videos/envio`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', cookie },
+      body: JSON.stringify({ titulo: 'Local', tipo: 'video/mp4', tamanho: 20 })
+    });
+    assert.equal(resposta.status, 503);
   } finally {
     await new Promise((resolve, reject) => {
       servidor.close((error) => (error ? reject(error) : resolve()));
