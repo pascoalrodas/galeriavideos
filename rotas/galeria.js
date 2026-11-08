@@ -1,9 +1,14 @@
 import {
   LIMITE_ARQUIVO,
+  LIMITE_CAPA,
+  chaveCapaValida,
+  chaveDoPoster,
   chaveDoSrc,
   chaveValida,
   extensaoDoTipo,
   novaChave,
+  novaChaveCapa,
+  quadroValido,
   srcArquivo,
   tipoDaExtensao
 } from '../lib/arquivo.js';
@@ -40,9 +45,24 @@ function armazenamentoAusente(res) {
 }
 
 export function registrarRotasGaleria(app, { repositorio, sessao, template, armazenamento = null }) {
+  async function comCapas(videos) {
+    if (!armazenamento) return videos;
+    return Promise.all(videos.map(async (video) => {
+      const chave = chaveDoPoster(video.capaArquivo);
+      if (!chave) return video;
+      try {
+        const capa = await armazenamento.urlLeitura(chave);
+        return { ...video, capa };
+      } catch (error) {
+        console.error(error);
+        return video;
+      }
+    }));
+  }
+
   app.get('/galeria', async (req, res) => {
     if (!sessao.ler(req)) return res.redirect('/');
-    const videos = await repositorio.listar();
+    const videos = await comCapas(await repositorio.listar());
     const grade = videos.length
       ? montarGrade(videos)
       : '<p class="galeria-vazia">Nenhum vídeo na galeria.</p>';
@@ -176,6 +196,89 @@ export function registrarRotasGaleria(app, { repositorio, sessao, template, arma
     }
   });
 
+  app.post('/videos/:id/capa', async (req, res) => {
+    if (!exigirSessao(sessao, req, res)) return;
+    if (!armazenamento) return armazenamentoAusente(res);
+
+    const id = lerId(req.params.id);
+    if (!id) return res.status(400).json({ erro: 'Vídeo inválido.' });
+
+    const video = await repositorio.obter(id);
+    if (!video) return res.status(404).json({ erro: 'Vídeo não encontrado.' });
+    if (!chaveDoSrc(video.src)) return res.status(400).json({ erro: 'Esse vídeo não é um arquivo.' });
+
+    const existente = chaveDoPoster(video.capaArquivo);
+    if (existente) {
+      try {
+        const url = await armazenamento.urlLeitura(existente);
+        return res.json({ pronta: true, url, quadro: video.quadro });
+      } catch (error) {
+        console.error(error);
+        return res.status(502).json({ erro: 'Não foi possível abrir a capa.' });
+      }
+    }
+
+    const chave = novaChaveCapa();
+    try {
+      const url = await armazenamento.urlEnvio({ chave, tipo: 'image/jpeg' });
+      return res.json({ pronta: false, chave, url, tipo: 'image/jpeg' });
+    } catch (error) {
+      console.error(error);
+      return res.status(502).json({ erro: 'Não foi possível preparar a capa.' });
+    }
+  });
+
+  app.post('/videos/:id/capa/confirmar', async (req, res) => {
+    if (!exigirSessao(sessao, req, res)) return;
+    if (!armazenamento) return armazenamentoAusente(res);
+
+    const id = lerId(req.params.id);
+    if (!id) return res.status(400).json({ erro: 'Vídeo inválido.' });
+
+    const chave = String(req.body?.chave || '');
+    const quadro = quadroValido(req.body?.quadro);
+    if (!chaveCapaValida(chave) || !quadro) {
+      return res.status(400).json({ erro: 'A capa enviada não foi aceita.' });
+    }
+
+    const video = await repositorio.obter(id);
+    if (!video) return res.status(404).json({ erro: 'Vídeo não encontrado.' });
+    if (!chaveDoSrc(video.src)) return res.status(400).json({ erro: 'Esse vídeo não é um arquivo.' });
+    if (video.capaArquivo) return res.status(409).json({ erro: 'Esse vídeo já tem capa.' });
+
+    let detalhes;
+    try {
+      detalhes = await armazenamento.detalhes(chave);
+    } catch (error) {
+      console.error(error);
+      return res.status(502).json({ erro: 'Não foi possível confirmar a capa.' });
+    }
+    const tamanhoOk = detalhes
+      && Number.isSafeInteger(detalhes.tamanho)
+      && detalhes.tamanho > 0
+      && detalhes.tamanho <= LIMITE_CAPA;
+    const tipoOk = detalhes?.tipo === 'image/jpeg';
+    if (!tamanhoOk || !tipoOk) {
+      try {
+        await armazenamento.excluir(chave);
+      } catch (error) {
+        console.error(error);
+      }
+      return res.status(400).json({ erro: 'A capa enviada não foi aceita.' });
+    }
+
+    const definido = await repositorio.definirCapa(id, { poster: srcArquivo(chave), quadro });
+    if (!definido) return res.status(409).json({ erro: 'Esse vídeo já tem capa.' });
+
+    try {
+      const url = await armazenamento.urlLeitura(chave);
+      return res.json({ url, quadro: definido.quadro });
+    } catch (error) {
+      console.error(error);
+      return res.status(502).json({ erro: 'Não foi possível abrir a capa.' });
+    }
+  });
+
   app.delete('/videos/:id', async (req, res) => {
     if (!exigirSessao(sessao, req, res)) return;
 
@@ -185,11 +288,11 @@ export function registrarRotasGaleria(app, { repositorio, sessao, template, arma
     const video = await repositorio.obter(id);
     if (!video) return res.status(404).json({ erro: 'Vídeo não encontrado.' });
 
-    const chave = chaveDoSrc(video.src);
-    if (chave) {
+    const chaves = [chaveDoSrc(video.src), chaveDoPoster(video.capaArquivo)].filter(Boolean);
+    if (chaves.length) {
       if (!armazenamento) return armazenamentoAusente(res);
       try {
-        await armazenamento.excluir(chave);
+        for (const chave of chaves) await armazenamento.excluir(chave);
       } catch (error) {
         console.error(error);
         return res.status(502).json({ erro: 'Não foi possível apagar o arquivo.' });
