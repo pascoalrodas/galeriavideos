@@ -186,6 +186,12 @@ h1 {
   pointer-events: none;
 }
 
+.video-facade .video-capa {
+  z-index: 0;
+  object-fit: cover;
+  background: transparent;
+}
+
 .video-facade:has(.video-capa)::before {
   content: "";
   position: absolute;
