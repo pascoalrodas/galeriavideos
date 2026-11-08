@@ -3,7 +3,35 @@ const painel = document.getElementById('form-video');
 const mensagem = document.getElementById('mensagem-video');
 const titulo = document.getElementById('titulo-video');
 const iframe = document.getElementById('iframe-video');
+const arquivoInput = document.getElementById('arquivo-video');
+const campoIframe = document.getElementById('campo-iframe');
+const campoArquivo = document.getElementById('campo-arquivo');
 const galeria = document.querySelector('.gallery');
+const LIMITE_ARQUIVO = 2 * 1024 * 1024 * 1024;
+const TIPOS_ARQUIVO = new Map([
+  ['mp4', 'video/mp4'],
+  ['webm', 'video/webm'],
+  ['mov', 'video/quicktime'],
+  ['ogv', 'video/ogg'],
+  ['ogg', 'video/ogg']
+]);
+
+let modo = 'iframe';
+
+function definirModo(proximo) {
+  modo = proximo;
+  const arquivo = proximo === 'arquivo';
+  campoIframe.classList.toggle('escondido', arquivo);
+  campoArquivo.classList.toggle('escondido', !arquivo);
+  iframe.required = !arquivo;
+  document.getElementById('modo-iframe').classList.toggle('modo-ativo', !arquivo);
+  document.getElementById('modo-arquivo').classList.toggle('modo-ativo', arquivo);
+  document.getElementById('modo-iframe').setAttribute('aria-pressed', String(!arquivo));
+  document.getElementById('modo-arquivo').setAttribute('aria-pressed', String(arquivo));
+}
+
+document.getElementById('modo-iframe').addEventListener('click', () => definirModo('iframe'));
+document.getElementById('modo-arquivo').addEventListener('click', () => definirModo('arquivo'));
 
 botaoAbrir.addEventListener('click', () => {
   const aberto = !painel.classList.toggle('escondido');
@@ -11,14 +39,89 @@ botaoAbrir.addEventListener('click', () => {
   if (aberto) titulo.focus();
 });
 
+function tipoDoArquivo(arquivo) {
+  const informado = String(arquivo.type || '').toLowerCase();
+  if ([...TIPOS_ARQUIVO.values()].includes(informado)) return informado;
+  const extensao = arquivo.name.split('.').pop()?.toLowerCase();
+  return TIPOS_ARQUIVO.get(extensao) || '';
+}
+
+async function enviarArquivo(botao) {
+  const arquivo = arquivoInput.files?.[0];
+  if (!arquivo) {
+    mensagem.textContent = 'Escolha um arquivo de vídeo.';
+    mensagem.classList.add('erro');
+    return;
+  }
+  const tipo = tipoDoArquivo(arquivo);
+  if (!tipo) {
+    mensagem.textContent = 'Use um vídeo MP4, WebM, MOV ou OGG.';
+    mensagem.classList.add('erro');
+    return;
+  }
+  if (arquivo.size > LIMITE_ARQUIVO) {
+    mensagem.textContent = 'O arquivo passa de 2 GB.';
+    mensagem.classList.add('erro');
+    return;
+  }
+
+  mensagem.textContent = 'Enviando o arquivo...';
+  const preparo = await fetch('/videos/envio', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      titulo: titulo.value,
+      tipo,
+      tamanho: arquivo.size
+    })
+  });
+  const dados = await preparo.json().catch(() => ({}));
+  if (!preparo.ok) {
+    mensagem.textContent = dados.erro || 'Não foi possível preparar o envio.';
+    mensagem.classList.add('erro');
+    return;
+  }
+
+  const envio = await fetch(dados.url, {
+    method: 'PUT',
+    headers: { 'Content-Type': dados.tipo || tipo },
+    body: arquivo
+  });
+  if (!envio.ok) {
+    mensagem.textContent = 'Não foi possível enviar o arquivo.';
+    mensagem.classList.add('erro');
+    return;
+  }
+
+  const confirmacao = await fetch('/videos/arquivo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ titulo: titulo.value, chave: dados.chave })
+  });
+  const salvo = await confirmacao.json().catch(() => ({}));
+  if (!confirmacao.ok) {
+    mensagem.textContent = salvo.erro || 'Não foi possível salvar o vídeo.';
+    mensagem.classList.add('erro');
+    return;
+  }
+  botao.disabled = true;
+  window.location.reload();
+  return true;
+}
+
 painel.addEventListener('submit', async (event) => {
   event.preventDefault();
   mensagem.textContent = '';
   mensagem.className = 'mensagem-video';
   const botao = painel.querySelector('button[type="submit"]');
   botao.disabled = true;
+  let salvou = false;
 
   try {
+    if (modo === 'arquivo') {
+      salvou = await enviarArquivo(botao);
+      return;
+    }
     const resposta = await fetch('/videos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -34,11 +137,12 @@ painel.addEventListener('submit', async (event) => {
       return;
     }
     window.location.reload();
+    salvou = true;
   } catch {
     mensagem.textContent = 'Erro ao conectar com o servidor.';
     mensagem.classList.add('erro');
   } finally {
-    botao.disabled = false;
+    if (!salvou) botao.disabled = false;
   }
 });
 
@@ -134,24 +238,76 @@ function trocarMidia(wrapper, no) {
 }
 
 function restaurarFachada(wrapper) {
-  const titulo = wrapper.closest('.video-container')?.querySelector('.video-title')?.textContent || 'Vídeo';
-  trocarMidia(wrapper, criarFachada(titulo, wrapper.dataset.capa));
+  wrapper.dataset.abertura = '';
+  const tituloVideo = wrapper.closest('.video-container')?.querySelector('.video-title')?.textContent || 'Vídeo';
+  trocarMidia(wrapper, criarFachada(tituloVideo, wrapper.dataset.capa));
+}
+
+function fecharOutros(wrapper) {
+  galeria.querySelectorAll('.video-wrapper').forEach((outro) => {
+    if (outro !== wrapper && outro.querySelector('iframe, video')) restaurarFachada(outro);
+  });
+}
+
+function urlArquivoSegura(valor) {
+  let url;
+  try {
+    url = new URL(valor);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'https:' || !url.hostname.endsWith('.r2.cloudflarestorage.com')) return null;
+  return url.href;
+}
+
+async function montarArquivo(wrapper) {
+  const id = wrapper.closest('.video-container')?.dataset.id;
+  if (!id) return;
+  const marca = String(Date.now());
+  wrapper.dataset.abertura = marca;
+  fecharOutros(wrapper);
+  try {
+    const resposta = await fetch(`/videos/${id}/reproducao`);
+    const dados = await resposta.json().catch(() => ({}));
+    if (wrapper.dataset.abertura !== marca) return;
+    if (!resposta.ok) {
+      window.alert(dados.erro || 'Não foi possível abrir o vídeo.');
+      return;
+    }
+    const seguro = urlArquivoSegura(dados.url);
+    if (!seguro) {
+      window.alert('Não foi possível abrir o vídeo.');
+      return;
+    }
+    const video = document.createElement('video');
+    video.controls = true;
+    video.playsInline = true;
+    video.src = seguro;
+    trocarMidia(wrapper, video);
+    video.play().catch(() => {});
+  } catch {
+    if (wrapper.dataset.abertura === marca) {
+      window.alert('Erro ao conectar com o servidor.');
+    }
+  }
 }
 
 function montarPlayer(wrapper) {
+  if (wrapper?.dataset.origem === 'arquivo') {
+    if (!wrapper.querySelector('video')) montarArquivo(wrapper);
+    return;
+  }
   const src = srcSeguro(wrapper?.dataset.src);
   if (!src) return;
-  const titulo = wrapper.closest('.video-container')?.querySelector('.video-title')?.textContent || 'Vídeo';
+  const tituloVideo = wrapper.closest('.video-container')?.querySelector('.video-title')?.textContent || 'Vídeo';
 
-  galeria.querySelectorAll('.video-wrapper').forEach((outro) => {
-    if (outro !== wrapper && outro.querySelector('iframe')) restaurarFachada(outro);
-  });
+  fecharOutros(wrapper);
 
   if (wrapper.querySelector('iframe')?.dataset.embed === src) return;
 
   const frame = document.createElement('iframe');
   frame.dataset.embed = src;
-  frame.title = titulo;
+  frame.title = tituloVideo;
   frame.setAttribute(
     'sandbox',
     'allow-scripts allow-same-origin allow-presentation allow-forms'
@@ -206,6 +362,27 @@ function pedirTelaCheia(elemento) {
   }
 }
 
+function fecharVideo(container) {
+  cancelarPlayerPendente();
+  const cheia = document.fullscreenElement
+    || document.webkitFullscreenElement
+    || document.mozFullScreenElement;
+  if (cheia === container) {
+    const sair = document.exitFullscreen
+      || document.webkitExitFullscreen
+      || document.mozCancelFullScreen;
+    if (sair) {
+      try {
+        Promise.resolve(sair.call(document)).catch(() => {});
+      } catch {
+        // o navegador recusou sair da tela cheia
+      }
+    }
+  }
+  const wrapper = container.querySelector('.video-wrapper');
+  if (wrapper?.querySelector('iframe, video')) restaurarFachada(wrapper);
+}
+
 function alternarTelaCheia(container) {
   cancelarPlayerPendente();
   const wrapper = container.querySelector('.video-wrapper');
@@ -241,6 +418,13 @@ galeria.addEventListener('click', async (event) => {
     if (event.detail > 1) return;
     const container = telaCheia.closest('.video-container');
     if (container) alternarTelaCheia(container);
+    return;
+  }
+
+  const fechar = event.target.closest('.botao-fechar');
+  if (fechar) {
+    const container = fechar.closest('.video-container');
+    if (container) fecharVideo(container);
     return;
   }
 
@@ -308,7 +492,7 @@ document.addEventListener('webkitfullscreenchange', aoMudarTelaCheia);
 document.addEventListener('mozfullscreenchange', aoMudarTelaCheia);
 
 galeria.addEventListener('dblclick', (event) => {
-  if (toqueDireto(event) || event.target.closest('.botao-excluir, .botao-tela-cheia')) return;
+  if (toqueDireto(event) || event.target.closest('.botao-excluir, .botao-fechar, .botao-tela-cheia')) return;
   const container = event.target.closest('.video-container');
   if (!container) return;
   alternarTelaCheia(container);
