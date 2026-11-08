@@ -18,10 +18,21 @@
   </header>
 
   <form id="form-video" class="painel-inserir escondido">
+    <div class="modo-video" role="group" aria-label="Como inserir o vídeo">
+      <button type="button" id="modo-iframe" class="modo-ativo" aria-pressed="true">Código do iframe</button>
+      <button type="button" id="modo-arquivo" aria-pressed="false">Arquivo</button>
+    </div>
     <label for="titulo-video">Título</label>
     <input type="text" id="titulo-video" name="titulo" required maxlength="180" placeholder="Nome do vídeo" autocomplete="off">
-    <label for="iframe-video">Código do iframe</label>
-    <textarea id="iframe-video" name="iframe" required maxlength="4000" placeholder='<iframe src="https://www.xvideos.com/embedframe/..." frameborder=0 width=510 height=400 scrolling=no allowfullscreen=allowfullscreen></iframe>'></textarea>
+    <div id="campo-iframe">
+      <label for="iframe-video">Código do iframe</label>
+      <textarea id="iframe-video" name="iframe" required maxlength="4000" placeholder='<iframe src="https://www.xvideos.com/embedframe/..." frameborder=0 width=510 height=400 scrolling=no allowfullscreen=allowfullscreen></iframe>'></textarea>
+    </div>
+    <div id="campo-arquivo" class="escondido">
+      <label for="arquivo-video">Arquivo de vídeo</label>
+      <input type="file" id="arquivo-video" accept="video/mp4,video/webm,video/quicktime,video/ogg,.mp4,.webm,.mov,.ogv,.ogg">
+      <p class="aviso-arquivo">MP4, WebM, MOV ou OGG, até 2 GB. O arquivo fica no bucket galeria-de-videos.</p>
+    </div>
     <button type="submit" class="botao-salvar">Salvar vídeo</button>
     <p id="mensagem-video" class="mensagem-video" role="status"></p>
   </form>
