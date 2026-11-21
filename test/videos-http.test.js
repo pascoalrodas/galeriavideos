@@ -210,12 +210,43 @@ test('envia um arquivo, reproduz e apaga o objeto', async () => {
     assert.equal(video.origem, 'arquivo');
     assert.equal(video.src, undefined);
 
+    const preparoCapa = await fetch(`${base}/videos/${video.id}/capa`, {
+      method: 'POST',
+      headers: { cookie }
+    });
+    assert.equal(preparoCapa.status, 200);
+    const capa = await preparoCapa.json();
+    assert.equal(capa.pronta, false);
+    assert.match(capa.chave, /^posters\/[0-9a-f-]{36}\.jpg$/);
+
+    const cedoCapa = await fetch(`${base}/videos/${video.id}/capa/confirmar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', cookie },
+      body: JSON.stringify({ chave: capa.chave, quadro: 0.5625 })
+    });
+    assert.equal(cedoCapa.status, 400);
+
+    armazenamento.objetos.set(capa.chave, { tamanho: 4000, tipo: 'image/jpeg' });
+    const confirmaCapa = await fetch(`${base}/videos/${video.id}/capa/confirmar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', cookie },
+      body: JSON.stringify({ chave: capa.chave, quadro: 0.5625 })
+    });
+    assert.equal(confirmaCapa.status, 200);
+    const salvaCapa = await confirmaCapa.json();
+    assert.match(salvaCapa.url, /leitura=1/);
+    assert.equal(salvaCapa.quadro, '0.5625');
+
     const pagina = await fetch(`${base}/galeria`, { headers: { cookie } });
     const html = await pagina.text();
     assert.match(html, /data-origem="arquivo"/);
     assert.match(html, /botao-fechar/);
     assert.match(html, /Arquivo/);
+    assert.match(html, /class="video-capa"/);
+    assert.match(html, /video-arquivo/);
+    assert.match(html, /--quadro:0\.5625/);
     assert.doesNotMatch(html, new RegExp(envio.chave));
+    assert.doesNotMatch(html, /r2:posters/);
 
     const reproducao = await fetch(`${base}/videos/${video.id}/reproducao`, { headers: { cookie } });
     assert.equal(reproducao.status, 200);
@@ -233,6 +264,7 @@ test('envia um arquivo, reproduz e apaga o objeto', async () => {
     });
     assert.equal(exclusao.status, 204);
     assert.equal(armazenamento.objetos.has(envio.chave), false);
+    assert.equal(armazenamento.objetos.has(capa.chave), false);
   } finally {
     await new Promise((resolve, reject) => {
       servidor.close((error) => (error ? reject(error) : resolve()));

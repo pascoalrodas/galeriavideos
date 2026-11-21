@@ -92,5 +92,18 @@ test('arquivo gravado não busca capa', async () => {
   await repositorio.listar();
   assert.equal(chamadas, 0);
   assert.equal((await repositorio.obter(novo.id)).titulo, 'Local');
+
+  const definido = await repositorio.definirCapa(novo.id, {
+    poster: 'r2:posters/22222222-2222-2222-2222-222222222222.jpg',
+    quadro: 0.5625
+  });
+  assert.equal(definido.capaArquivo, 'r2:posters/22222222-2222-2222-2222-222222222222.jpg');
+  assert.equal(definido.quadro, '0.5625');
+  assert.equal(definido.poster, null);
+  assert.equal(await repositorio.definirCapa(novo.id, {
+    poster: 'r2:posters/33333333-3333-3333-3333-333333333333.jpg',
+    quadro: 1.7778
+  }), null);
+  assert.equal((await repositorio.obter(novo.id)).quadro, '0.5625');
   banco.close();
 });

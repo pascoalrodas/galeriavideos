@@ -84,12 +84,67 @@ h1 {
   touch-action: manipulation;
 }
 
-.video-wrapper iframe {
+.video-wrapper iframe,
+.video-wrapper video {
   z-index: 1;
   background: #000;
 }
 
-.botao-tela-cheia {
+.video-wrapper video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.video-wrapper.video-arquivo {
+  width: min(100%, calc(72vh * var(--quadro, 1.7778)));
+  margin-inline: auto;
+  aspect-ratio: var(--quadro, 16 / 9);
+}
+
+.video-velocidade {
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.botao-velocidade {
+  min-width: 42px;
+  height: 32px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #fff;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.botao-velocidade.ativa,
+.botao-velocidade:active {
+  background: rgba(37, 99, 235, 0.95);
+}
+
+@media (pointer: coarse) {
+  .botao-velocidade {
+    min-width: 48px;
+    height: 40px;
+    font-size: 0.95rem;
+  }
+}
+
+.botao-tela-cheia,
+.botao-tela-inteira {
   position: absolute;
   z-index: 2;
   right: 8px;
@@ -107,24 +162,35 @@ h1 {
   touch-action: manipulation;
 }
 
-.botao-tela-cheia svg {
+.botao-tela-inteira {
+  right: 64px;
+}
+
+.botao-tela-cheia svg,
+.botao-tela-inteira svg {
   width: 28px;
   height: 28px;
   display: block;
 }
 
 .botao-tela-cheia:active,
-.botao-tela-cheia:focus-visible {
+.botao-tela-cheia:focus-visible,
+.botao-tela-inteira:active,
+.botao-tela-inteira:focus-visible,
+.botao-tela-cheia[aria-pressed="true"],
+.botao-tela-inteira[aria-pressed="true"] {
   background: rgba(37, 99, 235, 0.95);
 }
 
-.botao-tela-cheia:focus-visible {
+.botao-tela-cheia:focus-visible,
+.botao-tela-inteira:focus-visible {
   outline: 2px solid #38bdf8;
   outline-offset: 2px;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .botao-tela-cheia:hover {
+  .botao-tela-cheia:hover,
+  .botao-tela-inteira:hover {
     background: rgba(37, 99, 235, 0.95);
   }
 }
@@ -136,14 +202,23 @@ h1 {
     font-size: 1.8rem;
   }
 
-  .botao-tela-cheia {
+  .botao-tela-cheia,
+  .botao-tela-inteira {
     width: 64px;
     height: 64px;
-    right: 10px;
     bottom: 10px;
   }
 
-  .botao-tela-cheia svg {
+  .botao-tela-cheia {
+    right: 10px;
+  }
+
+  .botao-tela-inteira {
+    right: 84px;
+  }
+
+  .botao-tela-cheia svg,
+  .botao-tela-inteira svg {
     width: 40px;
     height: 40px;
   }
@@ -169,6 +244,12 @@ h1 {
   height: 100%;
   object-fit: cover;
   pointer-events: none;
+}
+
+.video-facade .video-capa {
+  z-index: 0;
+  object-fit: cover;
+  background: transparent;
 }
 
 .video-facade:has(.video-capa)::before {
@@ -292,6 +373,36 @@ h1 {
   outline-offset: 2px;
 }
 
+.video-velocidade,
+.botao-tela-cheia,
+.botao-tela-inteira,
+.botao-fechar {
+  transition: opacity 0.25s ease;
+}
+
+.video-container.controles-ocultos .video-velocidade,
+.video-container.controles-ocultos .botao-tela-cheia,
+.video-container.controles-ocultos .botao-tela-inteira,
+.video-container.controles-ocultos .botao-fechar {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.video-toque {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.video-container.controles-ocultos .video-toque {
+  display: block;
+}
+
 .botaoSair:hover,
 .botao-excluir:hover {
   background-color: #c82333;
@@ -380,6 +491,20 @@ button:disabled {
   color: #fca5a5;
 }
 
+.progresso-envio {
+  height: 8px;
+  border-radius: 999px;
+  background: #0f172a;
+  overflow: hidden;
+}
+
+.progresso-envio span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #2563eb;
+}
+
 .galeria-vazia {
   margin: 0;
   text-align: center;
@@ -400,36 +525,109 @@ button:disabled {
   margin: 0;
 }
 
-/* FULLSCREEN */
-.video-container:fullscreen,
-.video-container:-webkit-full-screen,
-.video-container:-moz-full-screen {
-  display: flex;
-  flex-direction: column;
+/* FULLSCREEN
+   Prefixos diferentes no mesmo seletor fazem o navegador ignorar a regra inteira.
+   Por isso a tela cheia ficava no tamanho do card, com faixas nas laterais. */
+.video-container:is(:fullscreen, :-webkit-full-screen),
+.video-container.esta-cheia {
+  display: block;
+  box-sizing: border-box;
   padding: 0 !important;
   margin: 0 !important;
   background: #000;
   border-radius: 0;
   width: 100%;
   height: 100%;
+  max-width: none;
+  overflow: hidden;
 }
 
-.video-container:fullscreen .video-wrapper,
-.video-container:-webkit-full-screen .video-wrapper,
-.video-container:-moz-full-screen .video-wrapper {
-  flex: 1;
-  height: auto;
+.video-container:is(:fullscreen, :-webkit-full-screen) .video-cabecalho,
+.video-container.esta-cheia .video-cabecalho {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  right: 12px;
+  left: auto;
+  margin: 0;
+}
+
+.video-container:is(:fullscreen, :-webkit-full-screen) .video-title,
+.video-container.esta-cheia .video-title {
+  display: none;
+}
+
+.video-container:is(:fullscreen, :-webkit-full-screen) .video-wrapper,
+.video-container.esta-cheia .video-wrapper,
+.video-container:is(:fullscreen, :-webkit-full-screen) .video-wrapper.video-arquivo,
+.video-container.esta-cheia .video-wrapper.video-arquivo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
   aspect-ratio: auto;
   border-radius: 0;
 }
 
-.video-container:fullscreen .video-rodape,
-.video-container:-webkit-full-screen .video-rodape,
-.video-container:-moz-full-screen .video-rodape,
-.video-container:fullscreen .botao-excluir,
-.video-container:-webkit-full-screen .botao-excluir,
-.video-container:-moz-full-screen .botao-excluir {
+.video-container:is(:fullscreen, :-webkit-full-screen) .video-wrapper video,
+.video-container.esta-cheia .video-wrapper video {
+  object-fit: cover;
+}
+
+.video-container:is(:fullscreen, :-webkit-full-screen) .video-wrapper.video-vertical video,
+.video-container.esta-cheia .video-wrapper.video-vertical video,
+.video-container.tela-inteira:is(:fullscreen, :-webkit-full-screen) .video-wrapper video,
+.video-container.tela-inteira.esta-cheia .video-wrapper video {
+  object-fit: contain;
+}
+
+.video-container:is(:fullscreen, :-webkit-full-screen) .botao-tela-cheia,
+.video-container.esta-cheia .botao-tela-cheia,
+.video-container:is(:fullscreen, :-webkit-full-screen) .botao-tela-inteira,
+.video-container.esta-cheia .botao-tela-inteira {
+  z-index: 4;
+  bottom: 72px;
+}
+
+.video-container:is(:fullscreen, :-webkit-full-screen) .botao-tela-cheia,
+.video-container.esta-cheia .botao-tela-cheia {
+  right: 12px;
+}
+
+.video-container:is(:fullscreen, :-webkit-full-screen) .botao-tela-inteira,
+.video-container.esta-cheia .botao-tela-inteira {
+  right: 68px;
+}
+
+@media (pointer: coarse) {
+  .video-container:is(:fullscreen, :-webkit-full-screen) .botao-tela-cheia,
+  .video-container.esta-cheia .botao-tela-cheia,
+  .video-container:is(:fullscreen, :-webkit-full-screen) .botao-tela-inteira,
+  .video-container.esta-cheia .botao-tela-inteira {
+    bottom: 96px;
+  }
+
+  .video-container:is(:fullscreen, :-webkit-full-screen) .botao-tela-inteira,
+  .video-container.esta-cheia .botao-tela-inteira {
+    right: 86px;
+  }
+}
+
+.video-container:is(:fullscreen, :-webkit-full-screen) .video-rodape,
+.video-container.esta-cheia .video-rodape,
+.video-container:is(:fullscreen, :-webkit-full-screen) .botao-excluir,
+.video-container.esta-cheia .botao-excluir {
   display: none;
+}
+
+.video-container:is(:fullscreen, :-webkit-full-screen) .video-velocidade,
+.video-container.esta-cheia .video-velocidade {
+  top: 12px;
+  left: 12px;
+  right: 72px;
 }
 
 @media (max-width: 768px) {

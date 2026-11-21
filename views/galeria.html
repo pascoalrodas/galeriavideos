@@ -3,8 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Galeria">
+  <meta name="theme-color" content="#0f172a">
   <title>Galeria de Vídeos</title>
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.png" type="image/png" sizes="32x32">
+  <link rel="icon" href="/icone-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -35,6 +43,9 @@
     </div>
     <button type="submit" class="botao-salvar">Salvar vídeo</button>
     <p id="mensagem-video" class="mensagem-video" role="status"></p>
+    <div id="progresso-envio" class="progresso-envio escondido" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Envio do vídeo">
+      <span></span>
+    </div>
   </form>
 
   <main class="gallery">

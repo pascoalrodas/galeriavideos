@@ -18,6 +18,7 @@ test('monta o card, o botão de excluir e escapa o título', () => {
   assert.ok(html.indexOf('video-wrapper') < html.lastIndexOf('botao-excluir'));
   assert.match(html, /class="botao-tela-cheia"/);
   assert.match(html, /aria-label="Tela cheia"/);
+  assert.doesNotMatch(html, /botao-tela-inteira/);
   assert.doesNotMatch(html, /<iframe/);
   assert.doesNotMatch(html, /autoplay/);
   assert.doesNotMatch(html, /<Jerry>/);
@@ -33,11 +34,46 @@ test('arquivo fica sem o endereço interno e sem capa', () => {
     }
   ]);
   assert.match(html, /data-origem="arquivo"/);
+  assert.match(html, /class="botao-tela-inteira"/);
+  assert.match(html, /aria-label="Tela cheia sem cortar"/);
   assert.match(html, /class="botao-fechar"/);
   assert.match(html, /class="botao-excluir" data-id="8"/);
   assert.doesNotMatch(html, /r2:videos/);
   assert.doesNotMatch(html, /data-src=/);
   assert.doesNotMatch(html, /<video/);
+  assert.doesNotMatch(html, /video-capa/);
+});
+
+test('arquivo com capa usa a imagem assinada e o quadro', () => {
+  const html = montarGrade([
+    {
+      id: 9,
+      titulo: 'Retrato',
+      src: 'r2:videos/11111111-1111-1111-1111-111111111111.mp4',
+      capa: 'https://abc.r2.cloudflarestorage.com/galeria-de-videos/posters/22222222-2222-2222-2222-222222222222.jpg?X-Amz-Signature=abc',
+      quadro: '0.5625'
+    }
+  ]);
+  assert.match(html, /class="video-wrapper video-arquivo video-vertical"/);
+  assert.match(html, /style="--quadro:0\.5625"/);
+  assert.match(html, /data-quadro="0\.5625"/);
+  assert.match(html, /class="video-capa" src="https:\/\/abc\.r2\.cloudflarestorage\.com\/galeria-de-videos\/posters\/22222222-2222-2222-2222-222222222222\.jpg\?X-Amz-Signature=abc"/);
+  assert.doesNotMatch(html, /r2:videos/);
+});
+
+test('ignora capa de outro host e quadro inválido', () => {
+  const html = montarGrade([
+    {
+      id: 9,
+      titulo: 'Ruim',
+      src: 'r2:videos/11111111-1111-1111-1111-111111111111.mp4',
+      capa: 'https://evil.com/capa.jpg',
+      quadro: '999'
+    }
+  ]);
+  assert.doesNotMatch(html, /video-capa/);
+  assert.doesNotMatch(html, /video-arquivo/);
+  assert.doesNotMatch(html, /evil\.com/);
 });
 
 test('mostra a capa quando o endereço da imagem é do cdn', () => {
